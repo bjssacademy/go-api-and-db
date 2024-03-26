@@ -1,6 +1,6 @@
 # Creating our server
 
-The first thing we are going to do in creating our APi is set up Go to run as an HTTP web server. This handles our requests and returns responses, normally in JSON format.
+The first thing we are going to do in creating our API is set up Go to run as an HTTP web server. This handles our requests and returns responses, normally in JSON format.
 
 Fortunately it's super easy to create a webserver in Go, as it has built-in packages for this, namely `net/http`.
 
