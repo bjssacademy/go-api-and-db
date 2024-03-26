@@ -1,6 +1,6 @@
 # Adding an API and a Database with Go
 
-This tutorial expects that you have at least a passing understanding of Go, and a rudimentary knowledge of APIs and HTTP methods such as GET, POST, PUT etc.
+This tutorial expects that you have at least a passing understanding of [Go](https://github.com/bjssacademy/goinaday/blob/main/readme.md), and a rudimentary knowledge of APIs and HTTP methods such as GET, POST, PUT etc.
 
 This is a simple guide to creating a basic HTTP server API, using almost only the internal Go packages.
 
