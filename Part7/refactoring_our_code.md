@@ -505,10 +505,9 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 
 ```
 
-## Extract DB Functionality
+---
 
-create new db folder
-create new db.go file
+[Part 8 - Connecting To A Real Database >>](/Part8/connecting_to_a_database.md)
 
 
 

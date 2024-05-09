@@ -107,3 +107,7 @@ If you want to check, you can now see the access control origin in the response 
 
 Of course there are packages you can use to do this too, one of which is https://github.com/rs/cors, but if you ever find yourself needing to modify requests or responses, you'll probably end up writing your own middleware at some point.
 
+---
+
+[Part 7 - Refactoring Our Code >>](/Part7/refactoring_our_code.md)
+
