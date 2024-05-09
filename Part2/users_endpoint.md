@@ -150,7 +150,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 
 ```
 
-The magic is essentially `usersJSON, errMarshal := json.Marshal(users)`, where you get a serialized JSON object back from your slice of objects. If you want, this has done the job or turning it into a byte array for us!
+The magic is essentially `usersJSON, errMarshal := json.Marshal(users)`, where you get a serialized JSON object back from your slice of objects. If you want, this has done the job of turning it into a byte array for us!
 
 Finally, we just need to change one line where we write the response to the `writer`, changing `[]byte(usersJSON)` to just `usersJSON` and the marshalling does the conversion to a byte array for us:
 

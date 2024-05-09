@@ -12,8 +12,8 @@ We'll move our code that is responsible for data into this file:
 package db
 
 type User struct {
-    ID   int    `json:"id" db:"id"`
-    Name string `json:"name" db:"name"`
+    ID   int    `json:"id"`
+    Name string `json:"name"`
 }
 
 var users []User
@@ -84,5 +84,5 @@ Now when we run our code and go to the `/api/users` endpoint, we see there are 3
 
 ---
 
-[Part 4 - Creating a new user >>](/part4/posting_and_creating.md)
+[Part 4 - Creating a new user >>](/Part4/posting_and_creating.md)
 
