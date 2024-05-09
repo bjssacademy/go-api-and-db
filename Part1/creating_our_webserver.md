@@ -106,4 +106,4 @@ We can already see our code is cleaner and easier to read an maintain.
 
 Save the file and run it again to make sure everything still works!
 
-[>> Part 2 - Creating an Endpoint](/Part2/users_endpoint.md)
+[Part 2 - Creating an Endpoint >>](/Part2/users_endpoint.md)

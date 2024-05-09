@@ -94,7 +94,7 @@ This code will add one new header to the `writer`, which is what we use to send 
 BUT, we're still not quite ready to go. To do so we'll need to instruct our multiplexer to use the function in our `main()` like so:
 
 ```go
-http.ListenAndServe(":8080", CorsMiddleware(router))
+err := http.ListenAndServe(":8080", CorsMiddleware(router))
 ```
 
 If you want to check, you can now see the access control origin in the response from any of your requests. Here's one from my GET request for a single user:
@@ -106,3 +106,4 @@ If you want to check, you can now see the access control origin in the response 
 ## Packages
 
 Of course there are packages you can use to do this too, one of which is https://github.com/rs/cors, but if you ever find yourself needing to modify requests or responses, you'll probably end up writing your own middleware at some point.
+

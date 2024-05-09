@@ -11,7 +11,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 }
 ```
 
-NOTE: We have changed to use `io.WriteString` here as it's more efficient and clearer that using the `fmt` package to return strings.
+NOTE: We have changed to use `io.WriteString` here as it's more efficient and clearer that using the `fmt` package to return strings, and we need to import the `io` package.
 
 And add a new handler in the `main` function:
 
@@ -93,7 +93,21 @@ type User struct {
 }
 ```
 
-Now we have a structure to represent a single user, we are going to want to update our `getUsers` function, Remove the line `usersJSON := '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]' ` and replace it with:
+Now we have a structure to represent a single user, we are going to want to update our `getUsers` function, Remove the line 
+
+`usersJSON := '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]' ` 
+
+and replace it with
+
+```go
+// Hardcoded list of users
+	users := []User{
+		{ID: 1, Name: "Alice"},
+		{ID: 2, Name: "Bob"},
+	}
+```
+
+Your code should now look like this:
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
@@ -123,8 +137,8 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 	}
 
     // Marshal users slice into JSON
-	usersJSON, err := json.Marshal(users)
-	if err != nil {
+	usersJSON, errMarshal := json.Marshal(users)
+	if errMarshal != nil {
 		// Handle error if marshalling fails
 		http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 		return
@@ -136,7 +150,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 
 ```
 
-The magic is essentially `usersJSON, err := json.Marshal(users)`, where you get a serialized JSON object back from your slice of objects. If you want, this has done the job or turning it into a byte array for us!
+The magic is essentially `usersJSON, errMarshal := json.Marshal(users)`, where you get a serialized JSON object back from your slice of objects. If you want, this has done the job or turning it into a byte array for us!
 
 Finally, we just need to change one line where we write the response to the `writer`, changing `[]byte(usersJSON)` to just `usersJSON` and the marshalling does the conversion to a byte array for us:
 
@@ -149,4 +163,37 @@ Okay, let's check everything still works and we still get JSON back in the brows
 
 ---
 
-[>> Part 3 - Connecting to our Database](/Part3/connecting_to_a_database.md)
+## Full getUsers function
+
+```go
+func getUsers(writer http.ResponseWriter, request *http.Request) {
+    
+    fmt.Printf("got /api/users request\n")
+
+    users := []User{
+		{ID: 1, Name: "Alice"},
+		{ID: 2, Name: "Bob"},
+	}
+
+	// Marshal users slice into JSON
+	usersJSON, errMarshal := json.Marshal(users)
+	if errMarshal != nil {
+		// Handle error if marshalling fails
+		http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+    
+    writer.Header().Set("Content-Type", "application/json") 
+
+    _, err := writer.Write([]byte(usersJSON))
+    if err != nil {
+        // Handle error if writing response fails
+        http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
+        return
+    }
+}
+```
+
+---
+
+[Part 3 - Fake it until you make it >>](/Part3/mocking_our_data.md)

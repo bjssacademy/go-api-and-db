@@ -42,7 +42,7 @@ Make sure your server is running, and click the Send button.
 
 ## Handling POST requests
 
-Let's update our `handleUsers` function to deal with POST requests:
+Let's update our `handleUsers` function to deal with POST request. Replace the code we just added with:
 
 ```go
 func handleUsers(writer http.ResponseWriter, request *http.Request) {
@@ -66,7 +66,7 @@ func handleUsers(writer http.ResponseWriter, request *http.Request) {
 
     if request.Method == http.MethodPost {
         
-        var user User
+        var user db.User
         err := json.NewDecoder(request.Body).Decode(&user)
         if err != nil {
             fmt.Println("Error decoding request body:", err)
@@ -82,71 +82,54 @@ func handleUsers(writer http.ResponseWriter, request *http.Request) {
 }
 ```
 
-2. Insert the data into the DB
+2. Insert the data into the Mock DB
 
-```go
-func handleUsers(writer http.ResponseWriter, request *http.Request) {
+Now, we want to add a new user to our "database". To do this, in our `inmemory.go` file, we add a new function, `AddUser()`:
 
-    if request.Method == http.MethodPost {
-        
-        var user User
-        err := json.NewDecoder(request.Body).Decode(&user)
-        if err != nil {
-            fmt.Println("Error decoding request body:", err)
-            http.Error(writer, "Bad Request", http.StatusBadRequest)
-            return
-        }
-
-		// Execute the query to insert the user into the database
-		var id int
-		err = db.DB.QueryRow("INSERT INTO users (name) VALUES ($1) RETURNING id", user.Name).Scan(&id)
-		if err != nil {
-			fmt.Println("Error inserting user into the database:", err)
-			http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	
-        return
-    }
-
-    //rest of the code as before
+```js
+func AddUser(user User) int {
 
 }
 ```
 
-3. Return the created user id:
+This function accepts a User struct as a parameter and will return the id of the newly created user.
+
+> In a DB, this id would be created for us by the database itself, as we'll see later. But for now, we'll be mocking that, and to do so we will create a package-level variable called `count` to increment this number.
+
+Add the `count` package-level variable at line 8, and set it's value to 3:
 
 ```go
-func handleUsers(writer http.ResponseWriter, request *http.Request) {
+var count int = 3
+```
 
-    if request.Method == http.MethodPost {
-        
-        var user User
-        err := json.NewDecoder(request.Body).Decode(&user)
-        if err != nil {
-            fmt.Println("Error decoding request body:", err)
-            http.Error(writer, "Bad Request", http.StatusBadRequest)
-            return
-        }
+Now we can append our user that was passed to us to the slice (which mocks what would happen in a real DB), increment the count, and return the id.
 
-		// Execute the query to insert the user into the database
-		var id int
-		err = db.DB.QueryRow("INSERT INTO users (name) VALUES ($1) RETURNING id", user.Name).Scan(&id)
-		if err != nil {
-			fmt.Println("Error inserting user into the database:", err)
-			http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
+```go
+func AddUser(user User) (id int) {
+	count++
+	user.ID = count
+
+	users = append(users,user)
 	
-		writer.WriteHeader(http.StatusCreated)
+	return count
+}
+```
+
+
+## 3. Return the id and successful response
+
+Now in our `main.go` file, we need to add the code to handle calling our mock database, and returning a succesful response with the id:
+
+```go
+    if request.Method == http.MethodPost {
+        // code as before
+
+        id := db.AddUser(user)
+        writer.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(writer, "User created successfully: %d", id)
 
         return
     }
-
-    //rest of the code as before
-
-}
 ```
 
 ## Test it out
@@ -157,8 +140,8 @@ Okay, let's test that out. Save the file and run the code. In Thunder Client upd
 
 and click Send!
 
-Now if you got back to your browser to `http://127.0.0.1:8080/api/users` you should see you have two users.
+Now if you got back to your browser to `http://127.0.0.1:8080/api/users` you should see you have four users.
 
 ---
 
-[>> Part 6 - Routing Requests](/Part6/multiplexing.md)
+[>> Part 5 - Routing Requests](/Part6/multiplexing.md)

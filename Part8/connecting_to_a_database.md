@@ -32,12 +32,12 @@ We're going to use an external package to make connecting to PostgreSQL easier. 
 
 Now we're going to create our own package to use. This will make it easier to handle our connections.
 
-1. Create a new folder called `db`.
-2. In that folder create a file called `db.go`.
+1. Create a new folder called `postgres` if it doesn't exist.
+2. In that folder create a file called `postgres.go`.
 3. Import the required packages:
 
 ```go
-package db
+package postgres
 
 import (
     "database/sql"
@@ -58,7 +58,7 @@ var DB *sql.DB
 
 So far, we haven't connected to it. We'll need to provide a way to do that, and we want to control that from our `main` function by providing the DB name, username, and password.
 
-Let's create an `InitDb` function in our `db.go` file that we can pass the connection string to that handles our connection:
+Let's create an `InitDb` function in our `postgres.go` file that we can pass the connection string to that handles our connection:
 
 ```go
 func InitDB(connectionString string) error {
@@ -100,11 +100,11 @@ Now let's check we can connect to our db:
 func main() {
     // Initialize the database connection
     connectionString := "user=postgres dbname=acme password=yourpassword host=localhost sslmode=disable"
-    if err := db.InitDB(connectionString); err != nil {
+    if err := postgres.InitDB(connectionString); err != nil {
         fmt.Println("Error initializing the database:", err)
         return
     }
-    defer db.DB.Close()
+    defer postgres.DB.Close()
 
     //rest of the code unchanged
 
@@ -144,6 +144,12 @@ Okay, so we have a database, but at the moment we don't have a table. Let's fix 
 
 Excellent. Let's run our code once more and check that everything still works!!
 
+#### Output
+```
+Successfully connected to the database!
+Server listening on port 8080...
+```
+
 ---
 
-[>> Part 4 - Querying our Data](/Part4/querying_our_db.md)
+[Part 8.1 - Querying our Data >>](/Part8/querying_our_db.md)

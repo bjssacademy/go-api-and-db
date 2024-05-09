@@ -32,26 +32,17 @@ func createUser(writer http.ResponseWriter, request *http.Request) {
 
     //if request.Method == http.MethodPost {
         
-        var user User
-        err := json.NewDecoder(request.Body).Decode(&user)
-        if err != nil {
-            fmt.Println("Error decoding request body:", err)
-            http.Error(writer, "Bad Request", http.StatusBadRequest)
-            return
-        }
+    var user db.User
+    err := json.NewDecoder(request.Body).Decode(&user)
+    if err != nil {
+        fmt.Println("Error decoding request body:", err)
+        http.Error(writer, "Bad Request", http.StatusBadRequest)
+        return
+    }
 
-		// Execute the query to insert the user into the database
-		var id int
-		err = db.DB.QueryRow("INSERT INTO users (name) VALUES ($1) RETURNING id", user.Name).Scan(&id)
-		if err != nil {
-			fmt.Println("Error inserting user into the database:", err)
-			http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
-			return
-		}
-	
-		writer.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(writer, "User created successfully: %d", id)
-
+    id := db.AddUser(user)
+    writer.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(writer, "User created successfully: %d", id)
 
         //return
     //}
@@ -71,8 +62,6 @@ Great. Now that's done, we have two separate functions for handling requests to 
 
 ```go
 func main() {
-
-    //DB connection code unchanged
 
     router := http.NewServeMux()
 
@@ -100,7 +89,7 @@ Let's save our file and run our server, and test it our with Thunder Client for 
 
 ## Pattern Matching - getting information from the URL
 
-Okay, now let's say we want to get a single user from the DB, based on their id. As in most APIs you provide this as part of the URL path, eg `api/users/1` will return the single user whose id matches 1 in the database.
+Okay, now let's say we want to get a single user from the DB, based on their *id*. As in most APIs you provide this as part of the URL path, eg `api/users/1` will return the single user whose id matches 1 in the database.
 
 To do this, we have to provide the parameter we want from the path in a special format using curly braces and a variable name between them in the places we expect in the path to our multiplexer. In our example, we want `api/users/{id}`.
 
@@ -116,12 +105,12 @@ Now we need to add our new function `getSingleUser`:
 func getSingleUser(writer http.ResponseWriter, request *http.Request) {
 
     idStr := request.PathValue("id")
-    fmt.Fprintf(w, "handling task with id=%v\n", id)
+    fmt.Fprintf(writer, "handling task with id=%v\n", idStr)
 
 }
 ```
 
-The code we're interesting in here is the one that extracts the value `is` from the *path*: `idStr := request.PathValue("id")`.
+The code we're interested in here is the one that extracts the value `is` from the *path*: `idStr := request.PathValue("id")`.
 
 > Things passed on the URL path are always *strings*.
 
@@ -147,7 +136,6 @@ import (
     "net/http"
     "encoding/json"
     "acme/db"
-    "github.com/jmoiron/sqlx"
     "strconv"
 )
 ```
@@ -171,31 +159,55 @@ func getSingleUser(writer http.ResponseWriter, request *http.Request) {
 
 As you can see, the `strconv.Atoi()` function return an error if the passed value could not be converted to a valid integer, which we catch and return a Bad request error (status code 400).
 
-Now that we have a valid `id` that is an integer, we can query the database:
+Now that we have a valid `id` that is an integer, we can query the mock database.
+
+To do that, in your `inmemory.go` file, add a new function `GetUser()`:
+
+```go
+func GetUser(id int) User {
+	
+}
+```
+
+Now, because this is Go, the idiomatic way is to range over the slice, and pull out the correct response:
+
+```go
+func GetUser(id int) User {
+	var user User
+
+	for _, user := range users{
+		if user.ID == id {
+			return user
+		}
+	}
+
+	return user
+
+}
+```
+
+Now we need to call this function from our `getSingleUser` function in `main.go`:
 
 ```go
 func getSingleUser(writer http.ResponseWriter, request *http.Request) {
 
-    //code as above 
-
-    // Query the database to get the user with the given id
-    var user User
-    err = db.DB.Get(&user, "SELECT * FROM users WHERE id = $1", id)
+    idStr := request.PathValue("id")
+    
+    id, err := strconv.Atoi(idStr)
     if err != nil {
-        fmt.Println("Error retrieving user from the database:", err)
-        http.Error(writer, "User Not Found", http.StatusNotFound)
+        fmt.Println("Error parsing ID:", err)
+        http.Error(writer, "Bad Request", http.StatusBadRequest)
         return
     }
 
-    // Write the user data as a JSON response
+    user := db.GetUser(id)
+
     json.NewEncoder(writer).Encode(user)
 
 }
 ```
 
-> Note here that is we get an error retrieving the user, it returns Not Found (status code 404).
-
-Finally we return the JSON, using `json.NewEncoder(writer).Encode(user)`; this means we don't have to manually set the content-type of the header before returning, and saves us a few more keystrokes instead on manually marshalling the data.
+---
 
 Okay, let's save our files and check that we can get a single user back from our database with Thunder Client. Create a new GET request for `http://127.0.0.1/api/users/1` and inspect the response.
 
@@ -205,8 +217,24 @@ Whilst we can Create and Read a user, at the moment we're missing 2 parts of CRU
 
 1. Create a function to handle the deletion of a user when provided a valid id, using the DELETE HTTP Method
 
-2. Create a function to handle the update of a user name, when provided a User struct as JSON using the PUT HTTP Method.
+> You may need to import package `slices` and use `slices.Delete`. There are other ways using arcane reslicing.
+
+2. Create a function to handle the update of a user name, when provided an id and a User struct as JSON using the PUT HTTP Method.
+
+> This can be confusing as you cannot directly update the user when you range over a slice in Go, as user will be a copy:
+>
+> Here's an example of code that looks like it works, but when you call  GET again, you will see it has NOT been updated:
+>
+> ```go
+> for index, user := range users {
+>		if user.ID == id {
+>			user.Name = updatedUser.Name
+>			return user
+>		}
+>	}
+> ```
+
 
 ---
 
-[>> Part 7 - Middleware & CORS](/Part7/middleware_and_cross_origin_requests.md)
+[>> Part 6 - Middleware & CORS](/Part6/middleware_and_cross_origin_requests.md)
