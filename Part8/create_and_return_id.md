@@ -49,6 +49,8 @@ Now, save all your changes, and run your webserver. Now, when you POST using Thu
 
 ---
 
+## Tasks
+
 Add the following functions to `postgres.go` and implement the SQL:
 
 1. GetUser() - gets a single user based on id
