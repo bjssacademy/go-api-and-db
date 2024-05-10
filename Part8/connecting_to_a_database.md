@@ -22,6 +22,8 @@ Next we need to create the acme database. Type in the following command:
 
 Now if you type `\l` you should see the acme database listed.
 
+Now type `\q` to exist the psql command line.
+
 ## Install 
 
 We're going to use an external package to make connecting to PostgreSQL easier. From the terminal run:

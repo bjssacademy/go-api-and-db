@@ -61,3 +61,4 @@ Make sure you update your `users-service.go` to call the postgres instance!
 
 ---
 
+[Chapter 9 - Database Migrations >>](/Part9/database_migrations.md)
