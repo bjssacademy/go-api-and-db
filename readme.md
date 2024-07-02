@@ -15,7 +15,8 @@ This is a simple guide to creating a basic HTTP server API, using almost only th
     1. [Part 8.1 - Querying Our Data](/Part8/querying_our_db.md)
     2. [Part 8.2 - Inserting Into Our Database](/Part8/create_and_return_id.md)
 9. [Part 9 - Database Migrations](/Part9/database_migrations.md)
-10. [Part X - The Repository Pattern](/PartX/repository-pattern.md)
+10. [Part 10 - The Repository Pattern](/Part10/repository-pattern.md)
+11. [Part 11 - Environment Variables]()
 
 ---
 
