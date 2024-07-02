@@ -661,3 +661,7 @@ config := config.Postgres
 And then run the code again, you'll see we are connected to the postgres database instead of the in-memory database.
 
 We can even go further than this using environment variables so we never have to set this directly, but we pick up the setting for the type of database from the environment we are in. This would, for instance, stop us committing code that uses the InMemory DB being deployed to our production server.
+
+---
+
+[Chapter 11 - Environment Variables >>](/Part11/readme.md)

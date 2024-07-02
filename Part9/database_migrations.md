@@ -82,3 +82,5 @@ Then we are going to remove our code that executed the CREATE statement and repl
 ```
 
 Now when you start your webserver, it will check for migrations and apply any new ones - really useful when you are pulling changes from others into your code!
+
+[Chapter 10 - The Repository Pattern >>](/Part10/repository-pattern.md)
