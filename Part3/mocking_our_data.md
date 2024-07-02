@@ -84,5 +84,5 @@ Now when we run our code and go to the `/api/users` endpoint, we see there are 3
 
 ---
 
-[Part 4 - Creating a new user >>](/Part4/posting_and_creating.md)
+[Part 3.1 - Testing >>](/Part3/testing_our_endpoints.md)
 

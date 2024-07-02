@@ -126,3 +126,5 @@ Finally we need to assert the response:
 Okay, save your file and run `go test -v` to see the test run!
 
 ----
+
+[Part 4 - Creating a new user >>](/Part4/posting_and_creating.md)
