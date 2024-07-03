@@ -7,7 +7,7 @@ This is a simple guide to creating a basic HTTP server API, using almost only th
 1. [Part 1 - Creating Our Web Server](/Part1/creating_our_webserver.md)
 2. [Part 2 - Creating an Endpoint](/Part2/users_endpoint.md)
 3. [Part 3 - Mocking Our data](/Part3/mocking_our_data.md)
-    1. [Part 3.1 Testing >>](/Part3/testing_our_endpoints.md)
+    1. [Part 3.1 Testing](/Part3/testing_our_endpoints.md)
 4. [Part 4 - Creating Users with a Post Request](/Part4/posting_and_creating.md)
 5. [Part 5 - Routing requests](/Part5/multiplexing.md)
 6. [Part 6 - Middleware & CORS](/Part6/middleware_and_cross_origin_requests.md)
