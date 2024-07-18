@@ -6,22 +6,35 @@ We're going to make use of [database migrations](https://github.com/bjssacademy/
 
 ## Install goose
 
-`go get -u github.com/pressly/goose/cmd/goose`
+### Windows
+
+`go install github.com/pressly/goose/cmd/goose@latest`
+
+### Unix
+
+https://pressly.github.io/goose/installation/#linux
 
 ## Set Environment Variables
 
 > :exclamation: Replace YOURPASSWORD in the below with your actual postgres password!
 
-### Windows
+### Windows (Command Prompt)
 
-```
+```cmd
 set GOOSE_DRIVER=postgres
 set GOOSE_DBSTRING=user=postgres password=YOURPASSWORD dbname=acme sslmode=disable
 ```
 
+### Windows (Powershell)
+
+```powershell
+$env:GOOSE_DRIVER="postgres"
+$env:GOOSE_DBSTRING="user=postgres password=YOURPASSWORD dbname=acme sslmode=disable"
+```
+
 ### Unix
 
-```
+```bash
 export GOOSE_DRIVER=postgres
 export GOOSE_DBSTRING=user=postgres password=YOURPASSWORD dbname=acme sslmode=disable
 ```
@@ -38,7 +51,7 @@ cd migrations
 Create our first migration:
 
 ```
-goose create users_table sql 
+goose create users_table sql
 ```
 
 Open the created file and update it:

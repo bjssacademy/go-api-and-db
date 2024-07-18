@@ -4,7 +4,7 @@ Okay, now we have our basic server up and running, let's add a new handler for t
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
-	
+
     fmt.Printf("got /api/users request\n")
 	io.WriteString(writer, "a list of all users from the db")
 
@@ -25,6 +25,7 @@ func main(){
 
 }
 ```
+
 If you now save the file and run the server again, you can go to `http://127.0.0.1:8080/api/users` and should see the string printed out!
 
 Obviously this doesn't help us very much at the moment. We've not actually returned anything from the database, or even structured JSON. Let's first check what we want to return and make sure we can get JSON back.
@@ -35,19 +36,19 @@ Let's bodge our way to returning a JSON structure by using a string representati
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     fmt.Printf("got /api/users request\n")
 
-    //1. We define a usersJSON string containing the JSON representation of the list 
-    //of users. This JSON string directly represents the users' data without needing 
+    //1. We define a usersJSON string containing the JSON representation of the list
+    //of users. This JSON string directly represents the users' data without needing
     //to define a struct or marshal it.
-    usersJSON := `[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]` 
-    
-    //2. We set the Content-Type header of the response to application/json to 
-    //indicate that the response contains JSON data.
-    writer.Header().Set("Content-Type", "application/json") 
+    usersJSON := `[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]`
 
-    //3. Finally, we write the JSON response string directly to the 
+    //2. We set the Content-Type header of the response to application/json to
+    //indicate that the response contains JSON data.
+    writer.Header().Set("Content-Type", "application/json")
+
+    //3. Finally, we write the JSON response string directly to the
     //http.ResponseWriter using writer.Write([]byte(usersJSON)).
     _, err := writer.Write([]byte(usersJSON))
     if err != nil {
@@ -66,11 +67,11 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 
 Okay, let's save our code and give it a go! Now if you go to the `api/users` endpoint you get back a JSON object.
 
-## Serializing - "Marshalling" in Go 
+## Serializing - "Marshalling" in Go
 
 Okay, so if we had static data that never changed we could use a string as we have done above. However, that seems very unlikely considering we want to get the data from a database.
 
-We'll probably be working on data that has a structure, and - as in many other languages - to convert an object to JSON you need to *serialize* it. In go this is called *marshalling* (and deserializing from JSON to an object is called *unmarshalling*).
+We'll probably be working on data that has a structure, and - as in many other languages - to convert an object to JSON you need to _serialize_ it. In go this is called _marshalling_ (and deserializing from JSON to an object is called _unmarshalling_).
 
 To return JSON from an object we're going to need to import the `encoding/json` package:
 
@@ -84,7 +85,7 @@ import (
 )
 ```
 
-Next, because we want to return *all* users, we'll need a struct to represent the data we want to return. For now, we'll just assume our users have an ID and a Name rather than any other data.
+Next, because we want to return _all_ users, we'll need a struct to represent the data we want to return. For now, we'll just assume our users have an ID and a Name rather than any other data.
 
 ```go
 type User struct {
@@ -93,9 +94,9 @@ type User struct {
 }
 ```
 
-Now we have a structure to represent a single user, we are going to want to update our `getUsers` function, Remove the line 
+Now we have a structure to represent a single user, we are going to want to update our `getUsers` function, Remove the line
 
-`usersJSON := '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]' ` 
+`usersJSON := '[{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]' `
 
 and replace it with
 
@@ -124,7 +125,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 }
 ```
 
-Okay, so now we have a slice of our hardcoded users, Alice and Bob. Next we need to marshall that to be JSON, using the `json.Marshal()` method:
+Okay, so now we have a slice of our hardcoded users, Alice and Bob. Next we need to marshal that to be JSON, using the `json.Marshal()` method:
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
@@ -167,7 +168,7 @@ Okay, let's check everything still works and we still get JSON back in the brows
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     fmt.Printf("got /api/users request\n")
 
     users := []User{
@@ -182,8 +183,8 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 		http.Error(writer, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-    
-    writer.Header().Set("Content-Type", "application/json") 
+
+    writer.Header().Set("Content-Type", "application/json")
 
     _, err := writer.Write([]byte(usersJSON))
     if err != nil {

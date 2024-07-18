@@ -2,7 +2,7 @@
 
 Well, we've managed to create an HTTP server, take web requests, perform CRUD operations on a database. Good for us!
 
-But our code is *ugly*. Yeah it works. But that's the simple part. Now we want it to be clean and usable.
+But our code is _ugly_. Yeah it works. But that's the simple part. Now we want it to be clean and usable.
 
 By this point our `main.go` file is probably about 200 lines long, and we've mixed up our API code with our DB layer, making them hard to separate and therefore test separately.
 
@@ -12,11 +12,11 @@ We've also got a long-running single connection. Oh dear.
 
 ## Refactor getUsers code
 
-First off, let's tidy up our `getUsers` function. This code we used to marshall a struct and return it:
+First off, let's tidy up our `getUsers` function. This code we used to marshal a struct and return it:
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     users := db.GetUsers()
 
 	// Marshal users slice into JSON
@@ -27,7 +27,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-    writer.Header().Set("Content-Type", "application/json") 
+    writer.Header().Set("Content-Type", "application/json")
 
     _, err := writer.Write([]byte(usersJSON))
     if err != nil {
@@ -42,7 +42,7 @@ We can replace the entire function with:
 
 ```go
 func getUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     users := db.GetUsers()
     json.NewEncoder(writer).Encode(users)
 
@@ -101,12 +101,11 @@ import (
 
 Now we have that, there should be a lot of red on your screen!
 
-### 2. Update private to public 
+### 2. Update private to public
 
-First, we need to make our function in `users-api.go` *public". We go this by uppercasing the first letter of each method e.g `updateSingleUser` becomes `UpdateSingleUser`.
+First, we need to make our function in `users-api.go` \*public". We go this by uppercasing the first letter of each method e.g `updateSingleUser` becomes `UpdateSingleUser`.
 
 ### 3. Import api package
-
 
 Next we need to import our new `api` package into `main.go`:
 
@@ -172,12 +171,13 @@ import (
 // other code
 
 func GetUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     users := service.GetUsers()
     json.NewEncoder(writer).Encode(users)
-    
+
 }
 ```
+
 ---
 
 Okay, we've now got a service layer the api calls, and a db layer the service layer calls!
@@ -220,7 +220,7 @@ func GetUsers() ([]db.User, error) {
 
 ```go
 func GetUsers(writer http.ResponseWriter, request *http.Request) {
-    
+
     users, err := service.GetUsers()
 
     if err != nil {
@@ -229,7 +229,7 @@ func GetUsers(writer http.ResponseWriter, request *http.Request) {
     }
 
     json.NewEncoder(writer).Encode(users)
-    
+
 }
 ```
 
@@ -241,11 +241,11 @@ Save your code and let's check it all works!
 
 We've got some duplication (welcome to Go, they quite like it). Let's move some common things out.
 
-We parse the `id` twice separately, and parse teh body three times. So we can extract them into their own functions:
+We parse the `id` twice separately, and parse the body three times. So we can extract them into their own functions:
 
 ```go
-func parseId(idStr string) (id int, err error){
-    
+func parseID(idStr string) (id int, err error){
+
     id, err = strconv.Atoi(idStr)
     if err != nil {
         fmt.Println("Error parsing ID:", err)
@@ -257,7 +257,7 @@ func parseId(idStr string) (id int, err error){
 }
 
 func decodeUser(body io.ReadCloser) (user db.User, err error) {
-    
+
     err = json.NewDecoder(body).Decode(&user)
     if err != nil {
         fmt.Println("Error decoding request body:", err)
@@ -273,7 +273,7 @@ And utilise it in our functions at our api layer:
 ```go
 func UpdateSingleUser(writer http.ResponseWriter, request *http.Request) {
 
-    id, err := parseId(request.PathValue("id"))
+    id, err := parseID(request.PathValue("id"))
 
     if err != nil {
         http.Error(writer, "Bad Request ID", http.StatusBadRequest)
@@ -295,7 +295,7 @@ func UpdateSingleUser(writer http.ResponseWriter, request *http.Request) {
 
 func DeleteSingleUser(writer http.ResponseWriter, request *http.Request) {
 
-    id, err := parseId(request.PathValue("id"))
+    id, err := parseID(request.PathValue("id"))
 
     if err != nil {
         http.Error(writer, "Bad Request ID", http.StatusBadRequest)
@@ -309,9 +309,9 @@ func DeleteSingleUser(writer http.ResponseWriter, request *http.Request) {
 }
 
 func GetSingleUser(writer http.ResponseWriter, request *http.Request) {
-    
-    id, err := parseId(request.PathValue("id"))
-    
+
+    id, err := parseID(request.PathValue("id"))
+
     if err != nil {
         http.Error(writer, "Bad Request ID", http.StatusBadRequest)
         return
@@ -324,7 +324,7 @@ func GetSingleUser(writer http.ResponseWriter, request *http.Request) {
 }
 
 func CreateUser(writer http.ResponseWriter, request *http.Request) {
-    
+
     user, err := decodeUser(request.Body)
 
     if err != nil {
@@ -426,6 +426,7 @@ func UpdateUser(id int, updatedUser User) (User, error) {
 
 }
 ```
+
 ---
 
 ## Task
@@ -460,7 +461,7 @@ And update our `users-api.go` function:
 ```go
 func DeleteSingleUser(writer http.ResponseWriter, request *http.Request) {
 
-    id, err := parseId(request.PathValue("id"))
+    id, err := parseID(request.PathValue("id"))
 
     if err != nil {
         http.Error(writer, "Bad Request ID", http.StatusBadRequest)
@@ -468,7 +469,7 @@ func DeleteSingleUser(writer http.ResponseWriter, request *http.Request) {
     }
 
     err = service.DeleteUser(id)
-    
+
     if err != nil {
         http.Error(writer, "Could not delete user", http.StatusBadRequest)
         return
@@ -487,9 +488,7 @@ func DeleteSingleUser(writer http.ResponseWriter, request *http.Request) {
 
 2. Create a new `model` folder, and move the `User` struct into it from the `inmemory` file. Fix all the references!
 
-------
-
-
+---
 
 # OLD
 
@@ -508,6 +507,7 @@ func getUsers(writer http.ResponseWriter, request *http.Request) {
 }
 
 ```
+
 ---
 
 ## Our tests
@@ -544,7 +544,7 @@ Change:
     handler := http.HandlerFunc(userAPI.GetUsers)
 ```
 
-Remove: 
+Remove:
 
 ```go
     expectedJSON, err := json.Marshal(expected)
@@ -582,7 +582,7 @@ Save and run your tests to ensure they work using `go test -v`.
 
 ## Testing with Mocks
 
-Now that we inject our db instance into the service, we can actually create our *own* instance that conforms the the repository interface if we wanted.
+Now that we inject our db instance into the service, we can actually create our _own_ instance that conforms the the repository interface if we wanted.
 
 This allows us to separate our database implementation and create our own test version. What's the benefit of this?
 
@@ -661,7 +661,7 @@ func TestGetUsersHandlerWithMock(t *testing.T) {
 
     userService := service.NewUserService(mockRepo)
     userAPI := api.NewUserAPI(userService)
-    
+
     handler := http.HandlerFunc(userAPI.GetUsers)
 
     handler.ServeHTTP(rr, req)
@@ -684,7 +684,7 @@ func TestGetUsersHandlerWithMock(t *testing.T) {
 
 #### What's going on?
 
-The new code is: 
+The new code is:
 
 ```go
     expected := []model.User{
@@ -700,7 +700,7 @@ The new code is:
 	}
 ```
 
-We set up our slice of what we expect back from the mock, as we have done before, *however* a new key piece is that these users are *not* hard-coded into our instance like they are in `inmemory.go`.
+We set up our slice of what we expect back from the mock, as we have done before, _however_ a new key piece is that these users are _not_ hard-coded into our instance like they are in `inmemory.go`.
 
 ```go
 mockRepo := &db.MockRepository{
@@ -714,7 +714,7 @@ MockGetUsers: func() ([]model.User, error) {
 
 `MockGetUsers` is a field in the `MockRepository` struct. It is of type `func() ([]model.User, error)`, which matches the signature of the `GetUsers` method in the `Repository` interface.
 
-The function defined here returns a slice of `model.User` and an `error`, *simulating* the behavior of the actual `GetUsers` method.
+The function defined here returns a slice of `model.User` and an `error`, _simulating_ the behavior of the actual `GetUsers` method.
 
 ```go
 return []model.User{
@@ -726,29 +726,24 @@ return []model.User{
 
 Inside the `MockGetUsers` function, a slice of `model.User` containing three users (Alice, Bob, and Terry) is returned, along with a `nil` error.
 
-This *simulates* a successful database query that retrieves a list of users.
+This _simulates_ a successful database query that retrieves a list of users.
 
 This mocked version of the `Repository` interface can be injected into services or handlers that depend on it, allowing us to control and predict the behaviour of the `GetUsers` method without needing an actual database connection.
 
-In short - we can *tell* the mock what to return in any instance without having to hard code anything into the mock struct!
+In short - we can _tell_ the mock what to return in any instance without having to hard code anything into the mock struct!
 
 ### Mocks are powerful
 
-Mocks are powerful because they allow us to test our code in isolation. 
+Mocks are powerful because they allow us to test our code in isolation.
 
 Imagine we have a service that interacts with a database, an external API, or any other dependency. Testing this service can become really complicated and unreliable if we always have to rely on these external systems being available and in a specific state.
 
 Now image we can mock that dependency, because we use an interface. We can separate our implementation from that of the third-party.
 
-Mocks give you *complete control* over the dependencies. We can define exactly what data the mocks should return and how they should behave. As an example, we can simulate a database returning a specific set of users, or an API responding with an error. This allows us to test how the service handles different scenarios, including edge cases.
+Mocks give you _complete control_ over the dependencies. We can define exactly what data the mocks should return and how they should behave. As an example, we can simulate a database returning a specific set of users, or an API responding with an error. This allows us to test how the service handles different scenarios, including edge cases.
 
 So now you know the basics of mocks!
 
 ---
 
 [Part 8 - Connecting To A Real Database >>](/Part8/connecting_to_a_database.md)
-
-
-
-
-
