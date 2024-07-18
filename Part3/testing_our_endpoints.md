@@ -2,7 +2,7 @@
 
 :exclamation: This section assumes you have covered the [Go testing basics](https://github.com/bjssacademy/go-testing-basics)
 
-Well, we have strayed from our TDD routes here a bit. We've violated the *test-first* aspect.
+Well, we have strayed from our TDD roots here a bit. We've violated the _test-first_ aspect.
 
 But you might end up on a project and have to do some POUTing (Plain Old Unit Testing). We'll show you why that is less preferable.
 
@@ -14,16 +14,17 @@ We do this using the built-in library `httptest` and the methods on it `httptest
 
 ### httptest.NewRecorder
 
-- Purpose: Used for *unit testing* individual HTTP handlers.
+- Purpose: Used for _unit testing_ individual HTTP handlers.
 - Efficiency: Does not start an actual HTTP server, making tests faster and consuming fewer resources.
 - Simplicity: Directly tests the handler functions without involving the networking stack.
 
 ### httptest.NewServer
-- Purpose: Used for *integration testing*, where you need to test the entire server stack, including middleware, routing, and network.
+
+- Purpose: Used for _integration testing_, where you need to test the entire server stack, including middleware, routing, and network.
 - Overhead: Starts an actual HTTP server, which can be slower and consume more resources.
 - Use Case: Suitable for end-to-end tests or when you need to simulate real HTTP requests and responses.
 
->For most handler-level unit tests, `httptest.NewRecorder` is preferred because it directly exercises the handler logic without the overhead of starting a server.
+> For most handler-level unit tests, `httptest.NewRecorder` is preferred because it directly exercises the handler logic without the overhead of starting a server.
 
 ---
 
@@ -53,7 +54,7 @@ func TestRootHandler(t *testing.T) {
 }
 ```
 
-Okay, we're going to want to arrange what we need first. And the first thing we need is an *httprequest* to send to our rooHandler function:
+Okay, we're going to want to arrange what we need first. And the first thing we need is an _httprequest_ to send to our rooHandler function:
 
 ```go
 func TestRootHandler(t *testing.T) {
@@ -64,7 +65,7 @@ func TestRootHandler(t *testing.T) {
 }
 ```
 
-So that's our *request*, which is a GET request to the root (`/`).
+So that's our _request_, which is a GET request to the root (`/`).
 
 Now we need to create a new instance of the `httptest.NewRecorder`:
 
@@ -102,12 +103,12 @@ This is shorthand for saying "Hey there HTTP Handler! I would like you to proces
 Because our `rootHandler` function looks like this:
 
 ```go
-func rootHandler(writer http.ResponseWriter, request *http.Request) 
+func rootHandler(writer http.ResponseWriter, request *http.Request)
 ```
 
-We are directly instantiating it to deal with our request, rather than having to actually *start* our web server to handle the request at the API layer and do any routing.
+We are directly instantiating it to deal with our request, rather than having to actually _start_ our web server to handle the request at the API layer and do any routing.
 
-Of course, this means we are *not* checking our routing, just that *if* we get a request on a certain path, then we will check that it is processed correctly, not that everything is wired together!
+Of course, this means we are _not_ checking our routing, just that _if_ we get a request on a certain path, then we will check that it is processed correctly, not that everything is wired together!
 
 Finally we need to assert the response. In Go, there is no built in assertion library, you have to do it through basic Go code. The creators of Go make many good points as to why - I don't agree with all of them, but I understand.
 
@@ -127,13 +128,13 @@ Since we are doing as much as possible with minimal external libraries, we'll do
     }
 ```
 
-> **Side note**: This is a bit odd isn't it? ```if status := rr.Code; status != http.StatusOK {```? We have a single line that assigns the code to the variable `status` and then checks that status is the HTTP OK status.
+> **Side note**: This is a bit odd isn't it? `if status := rr.Code; status != http.StatusOK {`? We have a single line that assigns the code to the variable `status` and then checks that status is the HTTP OK status.
 >
 > Why don't we assign outside the if block? Or why are we using it at all? Well, the answer is "idiomatic Go" as it always is. Using this style is preferred in idiomatic Go for single-use variables.
 
 Okay, save your file and run `go test -v` to see the test run!
 
-----
+---
 
 ## My First Integration Test
 
@@ -143,7 +144,7 @@ First, we need to create a new test:
 
 ```go
 func TestRootHandlerWithServer(t *testing.T) {
-    
+
 }
 ```
 
@@ -188,12 +189,12 @@ Now we have our response, we need to assert the response we got. We'll start wit
 
 ```go
 func TestRootHandlerWithServer(t *testing.T) {
-    //ARRANGE
+    // ARRANGE
 	// Create a new server with the handler
     server := httptest.NewServer(http.HandlerFunc(rootHandler))
     defer server.Close()
 
-	//ACT
+	// ACT
     // Send a GET request to the server
     resp, err := http.Get(server.URL + "/")
     if err != nil {
@@ -201,6 +202,7 @@ func TestRootHandlerWithServer(t *testing.T) {
     }
     defer resp.Body.Close()
 
+    // ASSERT
     // Check the status code
     if status := resp.StatusCode; status != http.StatusOK {
         t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -212,12 +214,12 @@ We've seen this before so I won't go into it. Now let's check the response body:
 
 ```go
 func TestRootHandlerWithServer(t *testing.T) {
-    //ARRANGE
+    // ARRANGE
 	// Create a new server with the handler
     server := httptest.NewServer(http.HandlerFunc(rootHandler))
     defer server.Close()
 
-	//ACT
+	// ACT
     // Send a GET request to the server
     resp, err := http.Get(server.URL + "/")
     if err != nil {
@@ -225,6 +227,7 @@ func TestRootHandlerWithServer(t *testing.T) {
     }
     defer resp.Body.Close()
 
+    // ASSERT
     // Check the status code
     if status := resp.StatusCode; status != http.StatusOK {
         t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
@@ -329,7 +332,7 @@ func TestGetUsersHandler(t *testing.T) {
     // ARRANGE
 	// code as before
     //...
-    
+
 	//Arrange our expected response
 	// code as before
     //...
@@ -356,7 +359,7 @@ Okay, so we've sent a GET request to our endpoint and get a response back; let's
     }
 ```
 
-The only thing here is checking the response body. This example compares the JSON of both as *strings* by converting the `expectedJSON` to a string.
+The only thing here is checking the response body. This example compares the JSON of both as _strings_ by converting the `expectedJSON` to a string.
 
 Go ahead and save you file and run your tests.
 
@@ -385,13 +388,13 @@ Here we read and unmarshal the response body from `rr.Body.Bytes()` into a slice
 
 We then use `reflect.DeepEqual` to compare the unmarshaled response (`actual`) with the expected data (`expected`).
 
-Doing this ensures that the JSON responses are compared based on their *logical content* rather than their string representation, making the test more robust and less prone to false negatives due to minor formatting differences.
+Doing this ensures that the JSON responses are compared based on their _logical content_ rather than their string representation, making the test more robust and less prone to false negatives due to minor formatting differences.
 
 The bonus of this in more complex testing end-to-end scenarios is that you can take the instance and alter it (for instance if you got a single user back, then updated their name to use in a PUT request).
 
 ---
 
-Here we have covered the basics of unit and integration testing. Now, why not write the *integration test* for the users endpoint? It should only take you a couple of minutes.
+Here we have covered the basics of unit and integration testing. Now, why not write the _integration test_ for the users endpoint? It should only take you a couple of minutes.
 
 ---
 

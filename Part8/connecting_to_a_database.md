@@ -24,7 +24,7 @@ Now if you type `\l` you should see the acme database listed.
 
 Now type `\q` to exist the psql command line.
 
-## Install 
+## Install
 
 We're going to use an external package to make connecting to PostgreSQL easier. From the terminal run:
 
@@ -50,17 +50,17 @@ import (
 var DB *sql.DB
 ```
 
-> When we import a package with an underscore, it tells the Go compiler that you want to import the package *solely* for its side effects, such as registering a driver or initializing global variables, but you don't intend to use any of its exported identifiers directly in your code.
+> When we import a package with an underscore, it tells the Go compiler that you want to import the package _solely_ for its side effects, such as registering a driver or initializing global variables, but you don't intend to use any of its exported identifiers directly in your code.
 >
-> 1. When we import _ "github.com/lib/pq", the Go compiler ensures that the `init` function of the pq package is executed. The `init` function contains code that registers the PostgreSQL driver with the `database/sql` package.
-> 
+> 1. When we import \_ "github.com/lib/pq", the Go compiler ensures that the `init` function of the pq package is executed. The `init` function contains code that registers the PostgreSQL driver with the `database/sql` package.
+>
 > 2. After importing, we can use the `database/sql` package to interact with the PostgreSQL database without explicitly referencing the pq package.
 
 `var db *sql.DB` is a package level variable we will use to hold our connection to the DB.
 
 So far, we haven't connected to it. We'll need to provide a way to do that, and we want to control that from our `main` function by providing the DB name, username, and password.
 
-Let's create an `InitDb` function in our `postgres.go` file that we can pass the connection string to that handles our connection:
+Let's create an `InitDB` function in our `postgres.go` file that we can pass the connection string to that handles our connection:
 
 ```go
 func InitDB(connectionString string) error {
@@ -115,7 +115,7 @@ func main() {
 
 `defer db.DB.Close()` if new to us. The `defer` keyword here means it will delay closing the database connection until the main function exist (when the server is closed down). This is NOT the best way to manage connections to your database!
 
-NOTE: You need to update `password`! 
+NOTE: You need to update `password`!
 
 If your username was `ted`, your password was `supersecretpassword`, and your database name was `acme`, the connectionString would be:
 
@@ -147,6 +147,7 @@ Okay, so we have a database, but at the moment we don't have a table. Let's fix 
 Excellent. Let's run our code once more and check that everything still works!!
 
 #### Output
+
 ```
 Successfully connected to the database!
 Server listening on port 8080...

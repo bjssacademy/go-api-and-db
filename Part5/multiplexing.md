@@ -4,9 +4,9 @@ Ok, so now we can send Post and Get requests to our endpoint. But it we want to 
 
 Fortunately in Go (from 1.22) there's an update to allow multiple handlers on a single route, or endpoint.
 
-Before Go 1.22 there was a *multiplexer* that offered rudimentary path matching, but not much else. This meant a proliferation of third-party libraries to provide more powerful routing options (such as gorilla/mux and chi).
+Before Go 1.22 there was a _multiplexer_ that offered rudimentary path matching, but not much else. This meant a proliferation of third-party libraries to provide more powerful routing options (such as gorilla/mux and chi).
 
-Multiplexers are used for routing incoming requests depending on the path and HTTP method to the correct *handler*. They do other things too such as supporting middleware (maybe session-based auth, or logging all requests). They also make it far easier to accept parameters on the path, such as `api/users/123` to get a specific user.
+Multiplexers are used for routing incoming requests depending on the path and HTTP method to the correct _handler_. They do other things too such as supporting middleware (maybe session-based auth, or logging all requests). They also make it far easier to accept parameters on the path, such as `api/users/123` to get a specific user.
 
 ## Starting with a Multiplexer
 
@@ -20,7 +20,7 @@ func main(){
     http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/api/users", handleUsers)
 
-    ///rest of the code 
+    ///rest of the code
 
 }
 ```
@@ -31,7 +31,7 @@ There are a couple of steps we need to refactor our code. First we need to extra
 func createUser(writer http.ResponseWriter, request *http.Request) {
 
     //if request.Method == http.MethodPost {
-        
+
     var user db.User
     err := json.NewDecoder(request.Body).Decode(&user)
     if err != nil {
@@ -89,7 +89,7 @@ Let's save our file and run our server, and test it our with Thunder Client for 
 
 ## Pattern Matching - getting information from the URL
 
-Okay, now let's say we want to get a single user from the DB, based on their *id*. As in most APIs you provide this as part of the URL path, eg `api/users/1` will return the single user whose id matches 1 in the database.
+Okay, now let's say we want to get a single user from the DB, based on their _id_. As in most APIs you provide this as part of the URL path, eg `api/users/1` will return the single user whose id matches 1 in the database.
 
 To do this, we have to provide the parameter we want from the path in a special format using curly braces and a variable name between them in the places we expect in the path to our multiplexer. In our example, we want `api/users/{id}`.
 
@@ -110,9 +110,9 @@ func getSingleUser(writer http.ResponseWriter, request *http.Request) {
 }
 ```
 
-The code we're interested in here is the one that extracts the value `is` from the *path*: `idStr := request.PathValue("id")`.
+The code we're interested in here is the one that extracts the value `id` from the _path_: `idStr := request.PathValue("id")`.
 
-> Things passed on the URL path are always *strings*.
+> Things passed on the URL path are always _strings_.
 
 Go ahead and save the file, and create a new POST request in Thunder Client to test it out with the endpoint `api/users/1`.
 
@@ -122,9 +122,9 @@ Now we have extracted it from the path and stored it in a variable, we can query
 
 There are a couple of things we need to do here that you many not have come across.
 
-Because path variables are all strings, we need to try and convert the provided `{id}` value to an int, as that's the type we have stored in the DB column for Id.
+Because path variables are all strings, we need to try and convert the provided `{id}` value to an int, as that's the type we have stored in the DB column for id.
 
-> If we passed an invalid value, we'd get a SQL error. But even more importantly, it might leave us open to *SQL injection attacks*, so we are validating our inputs. 
+> If we passed an invalid value, we'd get a SQL error. But even more importantly, it might leave us open to _SQL injection attacks_, so we are validating our inputs.
 
 To do this we use the [strconv package](https://pkg.go.dev/strconv) which we add to our imports:
 
@@ -165,7 +165,7 @@ To do that, in your `inmemory.go` file, add a new function `GetUser()`:
 
 ```go
 func GetUser(id int) User {
-	
+
 }
 ```
 
@@ -192,7 +192,7 @@ Now we need to call this function from our `getSingleUser` function in `main.go`
 func getSingleUser(writer http.ResponseWriter, request *http.Request) {
 
     idStr := request.PathValue("id")
-    
+
     id, err := strconv.Atoi(idStr)
     if err != nil {
         fmt.Println("Error parsing ID:", err)
@@ -223,17 +223,16 @@ Whilst we can Create and Read a user, at the moment we're missing 2 parts of CRU
 
 > This can be confusing as you cannot directly update the user when you range over a slice in Go, as user will be a copy:
 >
-> Here's an example of code that looks like it works, but when you call  GET again, you will see it has NOT been updated:
+> Here's an example of code that looks like it works, but when you call GET again, you will see it has NOT been updated:
 >
 > ```go
 > for index, user := range users {
->		if user.ID == id {
->			user.Name = updatedUser.Name
->			return user
->		}
->	}
+> 		if user.ID == id {
+> 			user.Name = updatedUser.Name
+> 			return user
+> 		}
+> 	}
 > ```
-
 
 ---
 
