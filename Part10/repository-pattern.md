@@ -88,7 +88,7 @@ type Repository interface {
 
 ## Implementing the interface
 
-We need to update our `inmemory.go` and `postgres.go` files to implement the interface, but before that let's restructure our project to noth our in-memory and postgrescode is in the `db` folder:
+We need to update our `inmemory.go` and `postgres.go` files to implement the interface, but before that let's restructure our project so both our in-memory and postgres code is in the `db` folder:
 
 ![alt text](image.png)
 

@@ -188,15 +188,168 @@ func main() {
 }
 
 ```
+---
 
 ## .env file
 
-One of the things that is problematic about environment variables is that sometimes you don;t know which ones need to be set, and you may only temporarily set them etc.
+One of the things that is problematic about environment variables is that sometimes you don't know which ones need to be set, and you may only temporarily set them etc.
 
 One way round this is to use a `.env` file that contains all the variables you need locally.
 
-Switch back to your main project and in the terminal run:
+Switch back to your **main Go project** and in the terminal run:
 
 ```
 go get github.com/joho/godotenv
 ```
+
+Now we want to create a `.env` file in our root. Open the file and add the following (remembering to change "yourpassword" to your actual postgres password):
+
+```bash
+DBTYPE="postgres"
+DBHOST="localhost"
+DBNAME="acme"
+DBUSER="postgres"
+DBPASSWORD="yourpassword"
+DBSSLMODE="disable"
+```
+
+> :exclamation: You don't want to commit your .env file to your repository! You can do this by adding a `.gitignore` rule. Ask your tutor!
+
+## Using our .env file
+
+Our config is currently hard coded - that is, it has our secret password in it and we have to tell it to load the type of database we want. Let's change that.
+
+### Update `config.go`
+
+We're going to add a function to our config that allows us to load the .env file (or another .env file, we'll come back to that later):
+
+```go
+package config
+
+import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
+)
+
+type DatabaseConfig struct {
+	Type     string // e.g., "postgres", "inmemory"
+	Host     string
+	User     string
+	Password string
+	SSLMode  string
+	DBName   string
+}
+
+func LoadDatabaseConfig(filename ...string) DatabaseConfig {
+	
+	// Default to ".env" if no filename is provided
+	envFile := ".env"
+	if len(filename) > 0 {
+		envFile = filename[0]
+	}
+
+	// Load the specified .env file
+	err := godotenv.Load(envFile)
+	if err != nil {
+		log.Fatalf("Error loading %s file", envFile)
+	}
+
+	return DatabaseConfig{
+		Type:     os.Getenv("DBTYPE"),
+		Host:     os.Getenv("DBHOST"),
+		User:     os.Getenv("DBUSER"),
+		Password: os.Getenv("DBPASSWORD"),
+		SSLMode:  os.Getenv("DBSSLMODE"),
+		DBName:   os.Getenv("DBNAME"),
+	}
+}
+```
+
+### Update `main.go`
+
+Of course, now we need to update our `main.go` file to use this function:
+
+```go
+// Load configuration
+config := config.LoadDatabaseConfig()
+```
+
+Okay, assuming everything is up and running, you can now use `go run .` to make sure you connect to the database!
+
+## More .env files!
+
+It’s common practice to have different .env files for different environments (e.g., `.env.development`, `.env.production`). This makes it easier to manage environment-specific configurations.
+
+Let's create an `.env.inmemory" file and see it in action:
+
+```bash
+DBTYPE="inmemory"
+DBHOST=""
+DBNAME=""
+DBUSER=""
+DBPASSWORD=""
+DBSSLMODE=""
+```
+
+And update your `main.go` file:
+
+
+```go
+// Load configuration
+config := config.LoadDatabaseConfig(".env.inmemory")
+```
+
+Run your code to check it's all working!
+
+## Testing
+
+We can also use this in our testing now (this is just an example, you don't have to update your tests).
+
+```go
+    //We no longer create the mock directly, instead we load an env file
+    // This is nice, because we can just change the .env file and point it at an actual DB
+    //or in memory, or whatever
+
+    //dbRepo := inmemory.NewInMemoryRepository();
+    config := config.LoadDatabaseConfig(".env.inmemory")
+    dbRepo, err := initializeDatabase(config)
+    if err != nil {
+        t.Fatalf("Error initializing the database: %v", err)
+        return
+    }
+    defer dbRepo.Close()
+```
+
+Again, this makes our tests a bit more flexible, and we can have them run in different environments in our pipeline, some with in-memory and some with actual db.
+
+---
+
+## Behaviour of os.Getenv
+
+The `os.Getenv` function in Go retrieves the value of an environment variable that is currently set in the environment at runtime.
+
+When you load variables from a file using `godotenv.Load`, those variables are set in the environment for the current process. However, if an environment variable is already set (e.g., by Azure), the `godotenv.Load` *does not overwrite it*.
+
+This is important to know! Essentially, if you have environment variables set in Azure (or whatever cloud environment) then godotenv will not overwrite them.
+
+### What does this mean?
+
+Well, it's actually good news. We don't want to have our connection details and secrets in our git repo .env file, but we *do* want our cloud environment to have variables that our application will use (where's the database I should be connecting to), and these might be different in each environment.
+
+We wouldn't want our test environment to accidentally point at our production environment because we accidentally committed our.env file and it overwrote the settings. That would make our client very sad. And possibly very angry too.
+
+---
+
+Now of course, if we push our app and deploy it, it won't work - because we are missing our environment variables. Oh dear.
+
+## Azure Environment Variables
+
+In the Azure Portal, you can set environment variables for your app. Since we're using a container, we'll need to set them slightly differently that you would do for a normal web app:
+
+https://learn.microsoft.com/en-us/azure/container-apps/environment-variables?tabs=portal
+
+> :exclamation: Okay, normally you'd want to set up a [key vault and have secrets](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets?tabs=azure-portal) for your environment variables. However, for now I'd recommend not doing that as it adds extra complexity. But if you fancy having a go, feel free!
+
+We don't have to do this now. When we get to steel threading we will look at everythign that needs to be done.

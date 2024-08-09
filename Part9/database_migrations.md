@@ -75,7 +75,6 @@ Then we are going to remove our code that executed the CREATE statement and repl
 
      // Run migrations
      err = goose.Up(db.DB, "./migrations")
-     //err = goose.Run("/migrations", db.DB, "postgres")
      if err != nil {
          panic(err)
      }
