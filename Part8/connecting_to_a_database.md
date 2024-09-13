@@ -1,6 +1,6 @@
 # Connecting to a database
 
-We're going to be using PostgreSQL as our database. If you don't have it installed already, check out [this guide](https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql/) on how to install it. MMake sure you install `pgAdmin`, `PostgreSQL Server` and `Command Line Tools`.
+We're going to be using PostgreSQL as our database. If you don't have it installed already, check out [this guide](https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql/) on how to install it. Make sure you install `pgAdmin`, `PostgreSQL Server` and `Command Line Tools`.
 
 Please make a note of the password you set in the setup!
 
@@ -26,7 +26,7 @@ Now type `\q` to exist the psql command line.
 
 ## Install 
 
-We're going to use an external package to make connecting to PostgreSQL easier. From the terminal run:
+We're going to use an external package to make connecting to PostgreSQL easier. From the terminal in your web app folder, run:
 
 `go get github.com/lib/pq`
 

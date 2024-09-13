@@ -1,7 +1,5 @@
 # Repository Pattern
 
-> Work In Progress
-
 What you may have noticed in our little tour is that we have to explicitly change the code when we want to call a different database. This is a bit of a shame really, as it means we are *tightly-coupled* to our database.
 
 We can't easily change out our database for another one without updating a load of code. Sad times indeed.
@@ -659,6 +657,273 @@ config := config.Postgres
 ```
 
 And then run the code again, you'll see we are connected to the postgres database instead of the in-memory database.
+
+---
+
+## More Bad News
+
+Okay, so we have one service, and we can use either in-memory or postgres. Sadly if we add another service and duplicate our structure we'll be asking that to connect to our db as well. We should really re-use our connection, so let's sort that out now.
+
+### Create new folder structure
+
+First create a new folder in your root called `repository`. Under that folder create another folder called `user`.
+
+Move your `repository.go` file to the new `repository\user` folder and rename it `user.go`.
+
+Update the package name in the `user.go` file so it looks like:
+
+```go
+package user
+
+import (
+	"acme/model"
+)
+
+type UserRepository interface {
+    GetUsers() ([]model.User, error)
+    GetUser(id int) (model.User, error)
+    AddUser(user model.User) (id int, err error)
+    UpdateUser(id int, user *model.User) (model.User, error)
+    DeleteUser(id int) error
+	Close()
+}
+```
+
+Next, move your `inmemory.go` file to the `repository\users` folder and rename it `inmemory-user-repository.go`. There is some renaming needed of the type, the package and the constructor:
+
+> Using Rename Symbol (right click on the function or variable name) will change all the references in the file automatically!
+
+
+```go
+package user
+
+import (
+	"acme/model"
+	"errors"
+	"slices"
+)
+
+type InMemoryUserRepository struct{}
+
+var count int = 3
+var users []model.User
+
+func NewInMemoryUserRepository() *InMemoryUserRepository {
+    InitDB() // Initialize the in-memory database with sample data
+    return &InMemoryUserRepository{}
+}
+```
+
+fix any other issues with names in the file.
+
+---
+
+Now we need to move your `postgres.go` file to the `repository\users` folder too, and rename it `user-repository.go`.
+
+You need to update the package to be `user` too.
+
+...and we need to rename a lot of things and remove some code...
+
+```go
+package user
+
+import (
+	"acme/model"
+	"errors"
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/lib/pq"
+)
+
+type PostgresUserRepository struct {
+    DB *sqlx.DB
+}
+
+func NewPostgresUserRepository(db *sqlx.DB) (*PostgresUserRepository) {
+    return &PostgresUserRepository{DB: db}
+}
+```
+
+There will be some red lines in your file - update them to be `PostgresUserRepository` instead of just `PostgresRepository`.
+
+---
+
+### Add our db connection
+
+Okay, now back in you `db\postgres` folder ad anew file `postgres.go`:
+
+```go
+package postgres
+
+import (
+	"fmt"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/pressly/goose"
+
+	_ "github.com/lib/pq"
+)
+
+type Postgres struct {
+    DB *sqlx.DB
+}
+
+func PostgresConnection(connectionString string) (*Postgres, error) {
+    db, err := sqlx.Open("postgres", connectionString)
+    if err != nil {
+        return nil, fmt.Errorf("error connecting to the database: %w", err)
+    }
+
+	// Run migrations
+    err = goose.Up(db.DB, "../migrations")
+    if err != nil {
+        panic(err)
+    }
+
+    // Ping DB to check connection is successful
+    if err := db.Ping(); err != nil {
+        return nil, fmt.Errorf("error pinging the database: %w", err)
+    }
+
+    db.SetMaxOpenConns(25)
+    db.SetMaxIdleConns(25)
+
+    fmt.Println("Successfully connected to the database!")
+    return &Postgres{DB: db}, nil
+}
+```
+
+### Edit main.go
+
+Now that we have done that, we need to alter our `main.go` file. I'll add the whole thing in here for simplicity, but the main part of functionality we are implementing is
+
+```go
+        db, err := postgres.PostgresConnection(connectionString)
+        if err != nil {
+            panic(err)
+        }
+
+        //this is where we set up all our repositories using the postgres db
+        userRepo = user.NewPostgresUserRepository(db.DB)
+```
+
+So we now get the connected db once, and can then inject it to the repository, rather than having each repository be responsible for database connectivity!
+
+#### Full main.go after changes:
+
+```go
+package main
+
+import (
+	"acme/api"
+	"acme/config"
+	"acme/db/postgres"
+    "acme/repository/user"
+	"acme/service"
+	"fmt"
+	"net/http"
+)
+
+func CorsMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+        writer.Header().Set("Access-Control-Allow-Origin", "*")
+        // Continue with the next handler
+        next.ServeHTTP(writer, request)
+    })
+}
+
+func main() {
+    // Load configuration
+    config := config.InMemory
+
+    var userRepo user.UserRepository
+
+    switch config.Type {
+    case "postgres":
+        connectionString := fmt.Sprintf("user=%s dbname=%s password=%s host=%s sslmode=%s", config.User, config.DBName, config.Password, config.Host, config.SSLMode)
+        
+        db, err := postgres.PostgresConnection(connectionString)
+        if err != nil {
+            panic(err)
+        }
+
+        //this is where we set up all our repositories using the postgres db
+        userRepo = user.NewPostgresUserRepository(db.DB)
+
+    case "inmemory":
+        //for in-memory, we don't need db connection details as the repository itself does this
+        userRepo = user.NewInMemoryUserRepository()
+
+    default:
+        fmt.Errorf("unsupported database type: %s", config.Type)
+    }
+
+    // Initialize services
+    userService := service.NewUserService(userRepo)
+    userAPI := api.NewUserAPI(userService)
+
+    // Initialize router
+    router := http.NewServeMux()
+
+    // Add routes
+    router.HandleFunc("GET /", rootHandler)
+    router.HandleFunc("GET /api/users", userAPI.GetUsers)
+    router.HandleFunc("POST /api/users", userAPI.CreateUser)
+    router.HandleFunc("GET /api/users/{id}", userAPI.GetSingleUser)
+    router.HandleFunc("DELETE /api/users/{id}", userAPI.DeleteSingleUser)
+    router.HandleFunc("PUT /api/users/{id}", userAPI.UpdateSingleUser)
+
+    // Starting the HTTP server on port 8080
+    fmt.Println("Server listening on port 8080...")
+    err := http.ListenAndServe(":8080", CorsMiddleware(router))
+    if err != nil {
+        fmt.Println("Error starting server:", err)
+    }
+}
+
+func rootHandler(writer http.ResponseWriter, request *http.Request) {
+    fmt.Fprintf(writer, "Hello, World!")
+}
+
+```
+
+### Update UserService
+
+Update you `user-service.go` to use the interface as the return type :
+
+```go
+package service
+
+import (
+	"acme/model"
+    "acme/repository/user" //ADDED
+	"fmt"
+)
+
+type UserService struct {
+    repository user. //CHANGED
+}
+
+// NewUserService creates a new instance of UserService.
+func NewUserService(repo user.UserRepository) *UserService { //CHANGED
+    return &UserService{
+        repository: repo,
+    }
+}
+
+//...all other code the same
+
+```
+
+O-kay. Right, that was a lot of effort. You might find some imports for your tests have changed, or you might need to point at `user.NewInMemoryUserRepository` now, but they should be a quick fix.
+
+Fix them all up and check they still work!
+
+Now, run your code in both modes and check everything still works!
+
+---
 
 We can even go further than this using environment variables so we never have to set this directly, but we pick up the setting for the type of database from the environment we are in. This would, for instance, stop us committing code that uses the InMemory DB being deployed to our production server.
 

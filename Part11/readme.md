@@ -253,7 +253,7 @@ func LoadDatabaseConfig(filename ...string) DatabaseConfig {
 	// Load the specified .env file
 	err := godotenv.Load(envFile)
 	if err != nil {
-		log.Fatalf("Error loading %s file", envFile)
+		log.Println(".env file not found, using environment variables")
 	}
 
 	return DatabaseConfig{
@@ -352,4 +352,4 @@ https://learn.microsoft.com/en-us/azure/container-apps/environment-variables?tab
 
 > :exclamation: Okay, normally you'd want to set up a [key vault and have secrets](https://learn.microsoft.com/en-us/azure/container-apps/manage-secrets?tabs=azure-portal) for your environment variables. However, for now I'd recommend not doing that as it adds extra complexity. But if you fancy having a go, feel free!
 
-We don't have to do this now. When we get to steel threading we will look at everythign that needs to be done.
+We don't have to do this now. When we get to steel threading we will look at everything that needs to be done.
